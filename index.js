@@ -33,6 +33,10 @@ console.log(
     chalk.green(`Kenya-Ultra Public Bot v${VERSION}\n`)
 );
 
+// Reconnect backoff state
+let retryDelay = 3000;
+const MAX_RETRY_DELAY = 60000;
+
 
 async function start() {
 
@@ -91,6 +95,46 @@ async function connect(authState) {
     const sock = await createSocket(authState);
 
 
+    // ⚠️ IMPORTANT: this assumes authState exposes a saveCreds()
+    // function (like Baileys' own useMultiFileAuthState does).
+    // If core.js persists sessions a different way, replace the
+    // body of this listener with whatever core exposes for that
+    // — e.g. core.saveAuth(SESSION_ID, authState) — once you
+    // paste core.js I can correct this precisely.
+    sock.ev.on(
+        "creds.update",
+        async () => {
+
+            try {
+
+                if (typeof authState.saveCreds === "function") {
+
+                    await authState.saveCreds();
+
+                } else {
+
+                    console.log(
+                        chalk.yellow(
+                            "⚠ No saveCreds() found on authState — session will not persist!"
+                        )
+                    );
+
+                }
+
+            } catch (error) {
+
+                console.log(
+                    chalk.red(
+                        `❌ Failed to save credentials: ${error.message}`
+                    )
+                );
+
+            }
+
+        }
+    );
+
+
 
     sock.ev.on(
         "connection.update",
@@ -111,6 +155,9 @@ async function connect(authState) {
                         "🟢 WhatsApp Connected"
                     )
                 );
+
+                // Reset backoff on successful connection
+                retryDelay = 3000;
 
                 const heartbeat =
                     await core.heartbeat();
@@ -151,14 +198,19 @@ async function connect(authState) {
 
                     console.log(
                         chalk.blue(
-                            "🔄 Reconnecting..."
+                            `🔄 Reconnecting in ${retryDelay / 1000}s...`
                         )
                     );
 
 
                     setTimeout(
                         ()=>connect(authState),
-                        3000
+                        retryDelay
+                    );
+
+                    retryDelay = Math.min(
+                        retryDelay * 2,
+                        MAX_RETRY_DELAY
                     );
 
 
