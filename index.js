@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import chalk from "chalk";
 
 import { createSocket, shouldReconnect } from "./baileys.js";
+import { bootstrapAuthState } from "./sessionBootstrap.js";
 import core from "./core.js";
 
 dotenv.config();
@@ -43,29 +44,19 @@ async function start() {
     try {
 
         console.log(
-            chalk.blue("🔐 Validating SESSION_ID...")
+            chalk.blue("🔐 Preparing session...")
         );
 
 
-        const validation =
-            await core.validate(SESSION_ID);
-
-
-        if (!validation.success) {
-
-            throw new Error(
-                "Invalid SESSION_ID."
-            );
-
-        }
+        const authState = await bootstrapAuthState(SESSION_ID);
 
 
         console.log(
-            chalk.green("✅ SESSION_ID verified")
+            chalk.green("✅ Session ready")
         );
 
 
-        await connect(validation.auth);
+        await connect(authState);
 
 
     } catch(error) {
@@ -92,34 +83,16 @@ async function connect(authState) {
     );
 
 
-    const sock = await createSocket(authState);
+    const sock = await createSocket(authState.state);
 
 
-    // ⚠️ IMPORTANT: this assumes authState exposes a saveCreds()
-    // function (like Baileys' own useMultiFileAuthState does).
-    // If core.js persists sessions a different way, replace the
-    // body of this listener with whatever core exposes for that
-    // — e.g. core.saveAuth(SESSION_ID, authState) — once you
-    // paste core.js I can correct this precisely.
     sock.ev.on(
         "creds.update",
         async () => {
 
             try {
 
-                if (typeof authState.saveCreds === "function") {
-
-                    await authState.saveCreds();
-
-                } else {
-
-                    console.log(
-                        chalk.yellow(
-                            "⚠ No saveCreds() found on authState — session will not persist!"
-                        )
-                    );
-
-                }
+                await authState.saveCreds();
 
             } catch (error) {
 
@@ -334,3 +307,4 @@ async function connect(authState) {
 
 
 start();
+            
