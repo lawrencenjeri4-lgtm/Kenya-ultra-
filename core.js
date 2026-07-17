@@ -32,7 +32,7 @@ class KenyaUltraCore {
 
     }
 
-    async execute(sessionId, text) {
+    async execute(sessionId, message) {
 
         try {
 
@@ -40,7 +40,7 @@ class KenyaUltraCore {
                 `${CORE_URL}/execute`,
                 {
                     sessionId,
-                    text
+                    message
                 }
             );
 
@@ -50,7 +50,7 @@ class KenyaUltraCore {
 
             throw new Error(
                 error.response?.data?.message ||
-                "Command execution failed."
+                "Failed to execute command."
             );
 
         }
@@ -68,6 +68,27 @@ class KenyaUltraCore {
         } catch {
 
             return null;
+
+        }
+
+    }
+
+    async getVersion() {
+
+        try {
+
+            const { data } = await axios.get(CORE_URL);
+
+            return {
+                success: true,
+                version: data.version
+            };
+
+        } catch {
+
+            return {
+                success: false
+            };
 
         }
 
