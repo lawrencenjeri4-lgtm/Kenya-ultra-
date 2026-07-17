@@ -19,7 +19,12 @@ class KenyaUltraCore {
                 }
             );
 
-            return data;
+            return {
+                success: data.success,
+                valid: data.valid,
+                client: data.client,
+                auth: data.runtime.auth
+            };
 
         } catch (error) {
 
@@ -62,7 +67,6 @@ class KenyaUltraCore {
         try {
 
             const { data } = await axios.get(CORE_URL);
-
             return data;
 
         } catch {
