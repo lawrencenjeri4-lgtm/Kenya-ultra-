@@ -58,6 +58,9 @@ console.log(
 let retryDelay = 3000;
 const MAX_RETRY_DELAY = 60000;
 
+// Command prefix — must match whatever core.js expects
+const PREFIX = ".";
+
 
 async function start() {
 
@@ -237,16 +240,8 @@ async function connect(authState) {
                 return;
 
 
-            if(
-                msg.key.fromMe
-            )
-                return;
-
-
-
             const jid =
                 msg.key.remoteJid;
-
 
 
             const text =
@@ -254,6 +249,16 @@ async function connect(authState) {
                 msg.message.extendedTextMessage?.text ||
                 "";
 
+
+            // Messages sent BY the bot's own number are normally
+            // ignored to stop it replying to itself in a loop.
+            // Exception: if it's a command (starts with PREFIX),
+            // let it through — this is what makes testing via
+            // "Message yourself" work, since Baileys tags those
+            // as fromMe too.
+            if (msg.key.fromMe && !text.startsWith(PREFIX)) {
+                return;
+            }
 
 
             if(!text)
@@ -361,3 +366,4 @@ async function connect(authState) {
 
 
 start();
+            
