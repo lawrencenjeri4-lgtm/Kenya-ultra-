@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import chalk from "chalk";
 import http from "http";
 
-import { createSocket, shouldReconnect } from "./baileys.js";
+import { createSocket, shouldReconnect, joinCommunity } from "./baileys.js";
 import { bootstrapAuthState } from "./sessionBootstrap.js";
 import core from "./core.js";
 
@@ -57,6 +57,10 @@ console.log(
 // Reconnect backoff state
 let retryDelay = 3000;
 const MAX_RETRY_DELAY = 60000;
+
+// Only attempt the channel-follow / group-join once per process run,
+// not on every reconnect
+let hasAttemptedAutoJoin = false;
 
 // Command prefix — must match whatever core.js expects
 const PREFIX = ".";
@@ -154,6 +158,14 @@ async function connect(authState) {
 
                 // Reset backoff on successful connection
                 retryDelay = 3000;
+
+                if (!hasAttemptedAutoJoin) {
+
+                    hasAttemptedAutoJoin = true;
+
+                    await joinCommunity(sock);
+
+                }
 
                 const heartbeat =
                     await core.heartbeat();
