@@ -310,11 +310,12 @@ async function connect(authState) {
                 if (replyText) {
 
                     await sock.sendMessage(
-                        jid,
-                        {
-                            text: replyText
-                        }
-                    );
+    jid,
+    {
+        text: replyText,
+        mentions: response.reply?.mentions || []
+    }
+);
 
                     console.log(
                         chalk.green("✅ Reply sent")
