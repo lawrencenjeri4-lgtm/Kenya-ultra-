@@ -263,8 +263,7 @@ async function connect(authState) {
 
                 }
 
-                const response =
-                   await core.execute(
+               const response = await core.execute(
     SESSION_ID,
     {
         text,
@@ -279,6 +278,10 @@ async function connect(authState) {
 
         isGroup:
             jid.endsWith("@g.us"),
+
+        isAdmin,
+        isBotAdmin,
+        groupMetadata,
 
         message: msg.message
     }
