@@ -260,6 +260,10 @@ async function connect(authState) {
                 return;
 
 
+            console.log(
+                chalk.cyan(`📩 Message from ${jid}: "${text}"`)
+            );
+
 
             try {
 
@@ -285,6 +289,12 @@ async function connect(authState) {
                     );
 
 
+                console.log(
+                    chalk.cyan(
+                        `📤 Core response: ${JSON.stringify(response)}`
+                    )
+                );
+
 
                 if(
                     response?.reply
@@ -300,6 +310,18 @@ async function connect(authState) {
                         }
                     );
 
+                    console.log(
+                        chalk.green("✅ Reply sent")
+                    );
+
+
+                } else {
+
+                    console.log(
+                        chalk.yellow(
+                            "⚠ Core returned no reply (ignored, unknown command, or invalid session?)"
+                        )
+                    );
 
                 }
 
