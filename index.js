@@ -264,31 +264,25 @@ async function connect(authState) {
                 }
 
                 const response =
-                    await core.execute(
-                        SESSION_ID,
-                        {
-                            text,
+                   await core.execute(
+    SESSION_ID,
+    {
+        text,
 
-                            sender:
-                                msg.key.participant ||
-                                jid,
+        sender:
+            msg.key.participant || jid,
 
-                            chat: jid,
+        chat: jid,
 
-                            pushName:
-                                msg.pushName || "",
+        pushName:
+            msg.pushName || "",
 
-                            isGroup:
-                                jid.endsWith("@g.us"),
+        isGroup:
+            jid.endsWith("@g.us"),
 
-                            isAdmin,
-
-                            isBotAdmin,
-
-                            groupMetadata
-
-                        }
-                    );
+        message: msg.message
+    }
+); 
 
                 console.log(
                     chalk.cyan(
