@@ -1,9 +1,21 @@
 import fs from "fs";
 import path from "path";
-import { useMultiFileAuthState } from "baileys";
+import { useMultiFileAuthState, BufferJSON } from "baileys";
 import core from "./core.js";
 
 const AUTH_FOLDER = path.join(process.cwd(), "auth_info");
+
+/**
+ * Auth data that passes through JSON (Redis storage on Core, then
+ * an HTTP response) has every Buffer flattened into a plain object
+ * like { type: "Buffer", data: [1,2,3,...] } — Node does this
+ * automatically. Baileys needs real Buffer instances, not that
+ * shape, so we round-trip through BufferJSON's reviver to restore
+ * them before touching the auth state.
+ */
+function restoreBuffers(value) {
+    return JSON.parse(JSON.stringify(value), BufferJSON.reviver);
+}
 
 /**
  * Core is stateless — the SESSION_ID *is* the credentials (compressed
@@ -32,13 +44,16 @@ export async function bootstrapAuthState(sessionId) {
             throw new Error(validation.message || "Invalid SESSION_ID.");
         }
 
-        // Seed local state with what Core decoded from the SESSION_ID
-        Object.assign(state.creds, validation.auth.creds);
+        // Seed local state with what Core sent — restoring real
+        // Buffer objects first, since they arrived as plain JSON.
+        const restoredCreds = restoreBuffers(validation.auth.creds);
+        Object.assign(state.creds, restoredCreds);
 
         // Older SESSION_IDs may only contain creds — guard against
         // missing keys rather than throwing.
         if (validation.auth.keys) {
-            await state.keys.set(validation.auth.keys);
+            const restoredKeys = restoreBuffers(validation.auth.keys);
+            await state.keys.set(restoredKeys);
         }
 
         await saveCreds();
