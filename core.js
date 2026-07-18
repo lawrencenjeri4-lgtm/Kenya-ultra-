@@ -1,10 +1,9 @@
 import axios from "axios";
 
-const CORE_URL = process.env.CORE_URL;
-
-if (!CORE_URL) {
-    throw new Error("CORE_URL is not configured.");
-}
+// Default public Core endpoint — users only need to set SESSION_ID.
+// Advanced users running their own Core instance can still override
+// this by setting CORE_URL in their .env file.
+const CORE_URL = process.env.CORE_URL || "https://kenya-ultra-s9ai.onrender.com";
 
 class KenyaUltraCore {
 
