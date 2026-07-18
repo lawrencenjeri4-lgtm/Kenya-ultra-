@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import chalk from "chalk";
+import http from "http";
 
 import { createSocket, shouldReconnect } from "./baileys.js";
 import { bootstrapAuthState } from "./sessionBootstrap.js";
@@ -18,6 +19,25 @@ if (!SESSION_ID) {
 
     process.exit(1);
 }
+
+// Some hosts (Render, Railway, etc.) expect web services to bind
+// to a port and will kill the deploy otherwise, even though this
+// bot only makes outbound connections. This tiny server satisfies
+// that check and doubles as a simple health/uptime endpoint.
+const PORT = process.env.PORT || 3000;
+
+http.createServer((req, res) => {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+        status: "online",
+        service: "Kenya-Ultra Client",
+        version: VERSION
+    }));
+}).listen(PORT, () => {
+    console.log(
+        chalk.blue(`🌐 Health check server listening on port ${PORT}`)
+    );
+});
 
 console.clear();
 
