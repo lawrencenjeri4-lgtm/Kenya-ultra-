@@ -16,27 +16,30 @@ if (!SESSION_ID) {
     console.log(
         chalk.red("❌ SESSION_ID missing from .env")
     );
-
     process.exit(1);
 }
 
-// Some hosts (Render, Railway, etc.) expect web services to bind
-// to a port and will kill the deploy otherwise, even though this
-// bot only makes outbound connections. This tiny server satisfies
-// that check and doubles as a simple health/uptime endpoint.
 const PORT = process.env.PORT || 3000;
 
 http.createServer((req, res) => {
-    res.writeHead(200, { "Content-Type": "application/json" });
+    res.writeHead(200, {
+        "Content-Type": "application/json"
+    });
+
     res.end(JSON.stringify({
         status: "online",
         service: "Kenya-Ultra Client",
         version: VERSION
     }));
+
 }).listen(PORT, () => {
+
     console.log(
-        chalk.blue(`🌐 Health check server listening on port ${PORT}`)
+        chalk.blue(
+            `🌐 Health check server listening on port ${PORT}`
+        )
     );
+
 });
 
 console.clear();
@@ -54,17 +57,12 @@ console.log(
     chalk.green(`Kenya-Ultra Public Bot v${VERSION}\n`)
 );
 
-// Reconnect backoff state
 let retryDelay = 3000;
 const MAX_RETRY_DELAY = 60000;
 
-// Only attempt the channel-follow / group-join once per process run,
-// not on every reconnect
 let hasAttemptedAutoJoin = false;
 
-// Command prefix — must match whatever core.js expects
 const PREFIX = ".";
-
 
 async function start() {
 
@@ -74,19 +72,16 @@ async function start() {
             chalk.blue("🔐 Preparing session...")
         );
 
-
-        const authState = await bootstrapAuthState(SESSION_ID);
-
+        const authState =
+            await bootstrapAuthState(SESSION_ID);
 
         console.log(
             chalk.green("✅ Session ready")
         );
 
-
         await connect(authState);
 
-
-    } catch(error) {
+    } catch (error) {
 
         console.log(
             chalk.red(
@@ -100,18 +95,14 @@ async function start() {
 
 }
 
-
-
 async function connect(authState) {
-
 
     console.log(
         chalk.blue("📡 Connecting to WhatsApp...")
     );
 
-
-    const sock = await createSocket(authState.state);
-
+    const sock =
+        await createSocket(authState.state);
 
     sock.ev.on(
         "creds.update",
@@ -134,21 +125,16 @@ async function connect(authState) {
         }
     );
 
-
-
     sock.ev.on(
         "connection.update",
-        async(update)=>{
-
+        async (update) => {
 
             const {
                 connection,
                 lastDisconnect
             } = update;
 
-
-
-            if(connection === "open") {
+            if (connection === "open") {
 
                 console.log(
                     chalk.green(
@@ -156,7 +142,6 @@ async function connect(authState) {
                     )
                 );
 
-                // Reset backoff on successful connection
                 retryDelay = 3000;
 
                 if (!hasAttemptedAutoJoin) {
@@ -170,8 +155,7 @@ async function connect(authState) {
                 const heartbeat =
                     await core.heartbeat();
 
-
-                if(heartbeat){
+                if (heartbeat) {
 
                     console.log(
                         chalk.green(
@@ -181,18 +165,12 @@ async function connect(authState) {
 
                 }
 
-
             }
 
-
-
-            if(connection === "close") {
-
+            if (connection === "close") {
 
                 const reconnect =
                     shouldReconnect(lastDisconnect);
-
-
 
                 console.log(
                     chalk.yellow(
@@ -200,9 +178,7 @@ async function connect(authState) {
                     )
                 );
 
-
-
-                if(reconnect){
+                if (reconnect) {
 
                     console.log(
                         chalk.blue(
@@ -210,9 +186,8 @@ async function connect(authState) {
                         )
                     );
 
-
                     setTimeout(
-                        ()=>connect(authState),
+                        () => connect(authState),
                         retryDelay
                     );
 
@@ -220,7 +195,6 @@ async function connect(authState) {
                         retryDelay * 2,
                         MAX_RETRY_DELAY
                     );
-
 
                 } else {
 
@@ -234,56 +208,60 @@ async function connect(authState) {
 
             }
 
-
         }
     );
 
-
-
-    sock.ev.on(
+        sock.ev.on(
         "messages.upsert",
-        async({messages})=>{
-
+        async ({ messages }) => {
 
             const msg = messages[0];
 
+            if (!msg.message) return;
 
-            if(!msg.message)
-                return;
-
-
-            const jid =
-                msg.key.remoteJid;
-
+            const jid = msg.key.remoteJid;
 
             const text =
                 msg.message.conversation ||
                 msg.message.extendedTextMessage?.text ||
                 "";
 
-
-            // Messages sent BY the bot's own number are normally
-            // ignored to stop it replying to itself in a loop.
-            // Exception: if it's a command (starts with PREFIX),
-            // let it through — this is what makes testing via
-            // "Message yourself" work, since Baileys tags those
-            // as fromMe too.
             if (msg.key.fromMe && !text.startsWith(PREFIX)) {
                 return;
             }
 
-
-            if(!text)
-                return;
-
+            if (!text) return;
 
             console.log(
                 chalk.cyan(`📩 Message from ${jid}: "${text}"`)
             );
 
-
             try {
 
+                let groupMetadata = null;
+                let isAdmin = false;
+                let isBotAdmin = false;
+
+                if (jid.endsWith("@g.us")) {
+
+                    groupMetadata = await sock.groupMetadata(jid);
+
+                    const sender =
+                        msg.key.participant ||
+                        msg.key.remoteJid;
+
+                    const bot =
+                        sock.user.id.split(":")[0] + "@s.whatsapp.net";
+
+                    isAdmin = groupMetadata.participants.some(
+                        p => p.id === sender && p.admin
+                    );
+
+                    isBotAdmin = groupMetadata.participants.some(
+                        p => p.id === bot && p.admin
+                    );
+
+                }
 
                 const response =
                     await core.execute(
@@ -292,19 +270,25 @@ async function connect(authState) {
                             text,
 
                             sender:
-                            msg.key.participant ||
-                            jid,
+                                msg.key.participant ||
+                                jid,
 
                             chat: jid,
 
                             pushName:
-                            msg.pushName || "",
+                                msg.pushName || "",
 
                             isGroup:
-                            jid.endsWith("@g.us")
+                                jid.endsWith("@g.us"),
+
+                            isAdmin,
+
+                            isBotAdmin,
+
+                            groupMetadata
+
                         }
                     );
-
 
                 console.log(
                     chalk.cyan(
@@ -312,51 +296,33 @@ async function connect(authState) {
                     )
                 );
 
+                if (!response) return;
 
-                if (response) {
+                const replyText =
+                    typeof response === "string"
+                        ? response
+                        : response.reply?.text ??
+                          response.text ??
+                          response.message ??
+                          response.reply ??
+                          null;
 
-                    const replyText =
-                        typeof response === "string" ? response :
-                        typeof response.reply === "string" ? response.reply :
-                        response.reply?.text ??
-                        response.text ??
-                        response.message ??
-                        null;
+                if (replyText) {
 
-                    if (replyText) {
-
-                        await sock.sendMessage(
-                            jid,
-                            { text: replyText }
-                        );
-
-                        console.log(
-                            chalk.green("✅ Reply sent")
-                        );
-
-                    } else {
-
-                        console.log(
-                            chalk.yellow(
-                                "⚠ Core returned a response but no recognizable text field — check core.js return shape"
-                            )
-                        );
-
-                    }
-
-                } else {
+                    await sock.sendMessage(
+                        jid,
+                        {
+                            text: replyText
+                        }
+                    );
 
                     console.log(
-                        chalk.yellow(
-                            "⚠ Core returned null/undefined for this command — likely a command-matching issue in core.js"
-                        )
+                        chalk.green("✅ Reply sent")
                     );
 
                 }
 
-
-            } catch(error){
-
+            } catch (error) {
 
                 console.log(
                     chalk.red(
@@ -365,17 +331,11 @@ async function connect(authState) {
                     )
                 );
 
-
             }
-
 
         }
     );
 
-
 }
 
-
-
 start();
-            
