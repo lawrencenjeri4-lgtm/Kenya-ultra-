@@ -3,7 +3,7 @@ import {
     fetchLatestBaileysVersion,
     makeCacheableSignalKeyStore,
     DisconnectReason
-} from "@whiskeysockets/baileys";
+} from "baileys";
 
 import pino from "pino";
 
