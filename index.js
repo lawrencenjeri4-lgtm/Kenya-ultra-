@@ -296,30 +296,42 @@ async function connect(authState) {
                 );
 
 
-                if(
-                    response?.reply
-                ){
+                if (response) {
 
+                    const replyText =
+                        typeof response === "string" ? response :
+                        typeof response.reply === "string" ? response.reply :
+                        response.reply?.text ??
+                        response.text ??
+                        response.message ??
+                        null;
 
-                    await sock.sendMessage(
-                        jid,
-                        {
-                            text:
-                            response.reply.text ||
-                            String(response.reply)
-                        }
-                    );
+                    if (replyText) {
 
-                    console.log(
-                        chalk.green("✅ Reply sent")
-                    );
+                        await sock.sendMessage(
+                            jid,
+                            { text: replyText }
+                        );
 
+                        console.log(
+                            chalk.green("✅ Reply sent")
+                        );
+
+                    } else {
+
+                        console.log(
+                            chalk.yellow(
+                                "⚠ Core returned a response but no recognizable text field — check core.js return shape"
+                            )
+                        );
+
+                    }
 
                 } else {
 
                     console.log(
                         chalk.yellow(
-                            "⚠ Core returned no reply (ignored, unknown command, or invalid session?)"
+                            "⚠ Core returned null/undefined for this command — likely a command-matching issue in core.js"
                         )
                     );
 
@@ -349,4 +361,3 @@ async function connect(authState) {
 
 
 start();
-            
