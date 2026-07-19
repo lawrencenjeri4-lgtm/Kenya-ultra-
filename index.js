@@ -380,6 +380,44 @@ if (response.action === "add") {
     }
 
 }
+
+if (response.action === "promote") {
+
+    try {
+
+        await sock.groupParticipantsUpdate(
+            jid,
+            [response.target],
+            "promote"
+        );
+
+        console.log(
+            chalk.green(
+                `👑 Promoted ${response.target}`
+            )
+        );
+
+    } catch (error) {
+
+        console.log(
+            chalk.red(
+                "❌ Failed to promote:",
+                error.message
+            )
+        );
+
+        await sock.sendMessage(
+            jid,
+            {
+                text: "❌ Failed to promote that user."
+            }
+        );
+
+        return;
+
+    }
+
+}
                 
                 if (replyText) {
 
