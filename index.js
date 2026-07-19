@@ -304,21 +304,59 @@ async function connect(authState) {
                           response.reply ??
                           null;
 
-                if (replyText) {
+                if (response.action === "kick") {
 
-                    await sock.sendMessage(
-    jid,
-    {
-        text: replyText,
-        mentions: response.reply?.mentions || []
+    try {
+
+        await sock.groupParticipantsUpdate(
+            jid,
+            [response.target],
+            "remove"
+        );
+
+        console.log(
+            chalk.green(
+                `👢 Removed ${response.target}`
+            )
+        );
+
+    } catch (error) {
+
+        console.log(
+            chalk.red(
+                "❌ Failed to kick:",
+                error.message
+            )
+        );
+
+        await sock.sendMessage(
+            jid,
+            {
+                text: "❌ Failed to remove that user."
+            }
+        );
+
+        return;
+
     }
-);
 
-                    console.log(
-                        chalk.green("✅ Reply sent")
-                    );
+}
 
-                }
+if (replyText) {
+
+    await sock.sendMessage(
+        jid,
+        {
+            text: replyText,
+            mentions: response.reply?.mentions || []
+        }
+    );
+
+    console.log(
+        chalk.green("✅ Reply sent")
+    );
+
+}
 
             } catch (error) {
 
