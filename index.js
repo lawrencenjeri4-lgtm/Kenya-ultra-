@@ -296,14 +296,21 @@ console.dir(response, { depth: null });
 
                 if (!response) return;
 
-                const replyText =
-                    typeof response === "string"
-                        ? response
-                        : response.reply?.text ??
-                          response.text ??
-                          response.message ??
-                          response.reply ??
-                          null;
+                const replyData =
+    response.reply?.reply ??
+    response.reply ??
+    null;
+
+const replyText =
+    typeof response === "string"
+        ? response
+        : replyData?.text ??
+          response.text ??
+          response.message ??
+          null;
+
+const replyMentions =
+    replyData?.mentions || [];
 
                 if (response.action === "kick") {
 
@@ -425,7 +432,7 @@ if (response.action === "promote") {
         jid,
         {
             text: replyText,
-            mentions: response.reply?.mentions || []
+            mentions: replyMentions
         }
     );
 
@@ -433,7 +440,7 @@ if (response.action === "promote") {
         chalk.green("✅ Reply sent")
     );
 
-}
+                }
 
             } catch (error) {
 
