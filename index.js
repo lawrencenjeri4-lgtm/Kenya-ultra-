@@ -264,9 +264,6 @@ isAdmin = groupMetadata.participants.some(
     p => p.id === sender && p.admin
 );
 
-// Temporary
-isBotAdmin = true;
-
                 }
 
                const response = await core.execute(
