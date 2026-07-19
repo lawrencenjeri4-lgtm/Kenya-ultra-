@@ -425,6 +425,32 @@ if (response.action === "promote") {
     }
 
 }
+
+if (response.action === "demote") {
+
+    try {
+
+        await sock.groupParticipantsUpdate(
+            jid,
+            [response.target],
+            "demote"
+        );
+
+        console.log(
+            chalk.green(
+                `⬇️ Demoted ${response.target}`
+            )
+        );
+
+    } catch (error) {
+
+        console.log(
+            chalk.red(error.message)
+        );
+
+    }
+
+}
                 
                 if (replyText) {
 
