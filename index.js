@@ -245,6 +245,8 @@ async function connect(authState) {
                 if (jid.endsWith("@g.us")) {
 
                     groupMetadata = await sock.groupMetadata(jid);
+                    console.log("First participant:");
+console.dir(groupMetadata.participants[0], { depth: null });
 
                     const sender =
     msg.key.participant || msg.key.remoteJid;
