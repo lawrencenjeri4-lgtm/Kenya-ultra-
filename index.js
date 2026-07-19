@@ -249,19 +249,18 @@ async function connect(authState) {
                     const sender =
     msg.key.participant || msg.key.remoteJid;
 
-console.log("SOCK USER:", sock.user);
-console.log("SENDER:", sender);
-
-console.log(
-    "PARTICIPANTS:",
-    groupMetadata.participants.map(p => ({
-        id: p.id,
-        admin: p.admin
-    }))
-);
+const botIds = [
+    sock.user.id,
+    sock.user.id.split(":")[0] + "@s.whatsapp.net",
+    sock.user.id.split(":")[0] + "@lid"
+];
 
 isAdmin = groupMetadata.participants.some(
     p => p.id === sender && p.admin
+);
+
+isBotAdmin = groupMetadata.participants.some(
+    p => botIds.includes(p.id) && p.admin
 );
 
                 }
