@@ -289,10 +289,10 @@ isBotAdmin = groupMetadata.participants.some(
 ); 
 
                 console.log(
-                    chalk.cyan(
-                        `📤 Core response: ${JSON.stringify(response)}`
-                    )
-                );
+    chalk.cyan("📤 Core response:")
+);
+
+console.dir(response, { depth: null });
 
                 if (!response) return;
 
