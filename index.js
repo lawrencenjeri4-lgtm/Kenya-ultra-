@@ -343,7 +343,45 @@ isBotAdmin = groupMetadata.participants.some(
 
 }
 
-if (replyText) {
+if (response.action === "add") {
+
+    try {
+
+        await sock.groupParticipantsUpdate(
+            jid,
+            [response.target],
+            "add"
+        );
+
+        console.log(
+            chalk.green(
+                `➕ Added ${response.target}`
+            )
+        );
+
+    } catch (error) {
+
+        console.log(
+            chalk.red(
+                "❌ Failed to add:",
+                error.message
+            )
+        );
+
+        await sock.sendMessage(
+            jid,
+            {
+                text: "❌ Failed to add that user."
+            }
+        );
+
+        return;
+
+    }
+
+}
+                
+                if (replyText) {
 
     await sock.sendMessage(
         jid,
