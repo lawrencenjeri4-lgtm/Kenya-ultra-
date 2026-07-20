@@ -286,7 +286,9 @@ isBotAdmin = groupMetadata.participants.some(
         isBotAdmin,
         groupMetadata,
 
-        message: msg.message
+        message: msg.message,
+
+rawMessage: msg
     }
 ); 
 
