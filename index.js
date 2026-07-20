@@ -2,7 +2,12 @@ import dotenv from "dotenv";
 import chalk from "chalk";
 import http from "http";
 
-import { createSocket, shouldReconnect, joinCommunity } from "./baileys.js";
+import {
+    createSocket,
+    shouldReconnect,
+    joinCommunity,
+    downloadQuotedMedia
+} from "./baileys.js";
 import { bootstrapAuthState } from "./sessionBootstrap.js";
 import core from "./core.js";
 
@@ -448,9 +453,95 @@ if (response.action === "demote") {
 
                 if (response.action === "recover_view_once") {
 
-    console.log(
-        chalk.green("👁️ Recover View Once action received.")
-    );
+    try {
+
+        const quoted =
+            msg.message
+                ?.extendedTextMessage
+                ?.contextInfo
+                ?.quotedMessage;
+
+        if (!quoted) {
+
+            await sock.sendMessage(jid, {
+                text: "❌ No quoted message found."
+            });
+
+            return;
+
+        }
+
+        const media =
+            await downloadQuotedMedia(quoted);
+
+        if (!media) {
+
+            await sock.sendMessage(jid, {
+                text: "❌ Failed to download media."
+            });
+
+            return;
+
+        }
+
+        const sender =
+            msg.key.participant ||
+            msg.key.remoteJid;
+
+        if (media.type === "image") {
+
+            await sock.sendMessage(sender, {
+
+                image: media.buffer,
+
+                caption:
+`╭⊷ 👁️ *VIEW ONCE RECOVERED*
+│
+├⊷ 🖼️ *Type:* Image
+├⊷ 📥 *Status:* Delivered
+│
+╰⊷ 🐺 *Powered by Kenya-Ultra 👑*`
+
+            });
+
+        }
+
+        else {
+
+            await sock.sendMessage(sender, {
+
+                video: media.buffer,
+
+                caption:
+`╭⊷ 👁️ *VIEW ONCE RECOVERED*
+│
+├⊷ 🎥 *Type:* Video
+├⊷ 📥 *Status:* Delivered
+│
+╰⊷ 🐺 *Powered by Kenya-Ultra 👑*`
+
+            });
+
+        }
+
+        console.log("✅ View Once recovered.");
+
+    }
+
+    catch (err) {
+
+        console.log(err);
+
+        await sock.sendMessage(jid, {
+
+            text:
+                "❌ Failed to recover View Once."
+
+        });
+
+    }
+
+                }
 
                 }
                 
