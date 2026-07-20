@@ -279,8 +279,6 @@ isBotAdmin = groupMetadata.participants.some(
         groupMetadata,
         message: msg.message,
         rawMessage: msg,
-
-        sock
     }
 );
 
