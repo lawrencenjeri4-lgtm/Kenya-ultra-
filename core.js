@@ -51,10 +51,15 @@ class KenyaUltraCore {
 
         } catch (error) {
 
-            throw new Error(
-                error.response?.data?.message ||
-                "Failed to execute command."
-            );
+    console.log("========== CORE ERROR ==========");
+    console.dir(error.response?.data || error, { depth: null });
+    console.log("================================");
+
+    throw new Error(
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to execute command."
+    );
 
         }
 
