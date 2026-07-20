@@ -270,27 +270,19 @@ isBotAdmin = groupMetadata.participants.some(
     SESSION_ID,
     {
         text,
-
-        sender:
-            msg.key.participant || jid,
-
+        sender: msg.key.participant || jid,
         chat: jid,
-
-        pushName:
-            msg.pushName || "",
-
-        isGroup:
-            jid.endsWith("@g.us"),
-
+        pushName: msg.pushName || "",
+        isGroup: jid.endsWith("@g.us"),
         isAdmin,
         isBotAdmin,
         groupMetadata,
-
         message: msg.message,
+        rawMessage: msg,
 
-rawMessage: msg
+        sock
     }
-); 
+);
 
                 console.log(
     chalk.cyan("📤 Core response:")
