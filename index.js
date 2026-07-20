@@ -447,6 +447,14 @@ if (response.action === "demote") {
     }
 
 }
+
+                if (response.action === "recover_view_once") {
+
+    console.log(
+        chalk.green("👁️ Recover View Once action received.")
+    );
+
+                }
                 
                 if (replyText) {
 
