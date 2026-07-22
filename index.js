@@ -543,7 +543,6 @@ if (response.action === "demote") {
 
                 }
 
-                }
                 
                 if (replyText) {
 
@@ -578,3 +577,4 @@ if (response.action === "demote") {
 }
 
 start();
+                        
