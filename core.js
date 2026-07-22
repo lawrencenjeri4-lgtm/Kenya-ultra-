@@ -3,7 +3,7 @@ import axios from "axios";
 // Default public Core endpoint — users only need to set SESSION_ID.
 // Advanced users running their own Core instance can still override
 // this by setting CORE_URL in their .env file.
-const CORE_URL = process.env.CORE_URL || "https://kenya-ultra-core-git-900495233478.europe-west1.run.app";
+const CORE_URL = process.env.CORE_URL || "http://kenya-ultra-panel.duckdns.org:3001";
 
 class KenyaUltraCore {
 
